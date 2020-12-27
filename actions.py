@@ -2,7 +2,8 @@ import requests
 import json
 from proxy import proxyDict
 from bs4 import BeautifulSoup
-
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def getGroups(returnJson=0):
@@ -11,7 +12,7 @@ def getGroups(returnJson=0):
                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
     url = "http://tplan.madi.ru/tasks/task3,7_fastview.php"
 
-    response = requests.get(url=url, headers=headers, proxies=proxyDict, verify=False)
+    response = requests.get(url=url, headers=headers, proxies=None, verify=False)
     response.encoding = 'utf-8'
 
     soup = BeautifulSoup(response.content, 'lxml')
@@ -32,7 +33,7 @@ def getGroupsList(returnJson=0):
 
     url = "http://tplan.madi.ru/tasks/task3,7_fastview.php"
 
-    response = requests.get(url=url, headers=headers, proxies=proxyDict, verify=False)
+    response = requests.get(url=url, headers=headers, proxies=None, verify=False)
     response.encoding = 'utf-8'
 
     soup = BeautifulSoup(response.content, 'lxml')
@@ -54,7 +55,7 @@ def getDepart(returnJson=0):
 
     url = "http://tplan.madi.ru/tasks/task11_kafview.php"
 
-    response = requests.get(url=url, headers=headers, proxies=proxyDict, verify=False)
+    response = requests.get(url=url, headers=headers, proxies=None, verify=False)
     response.encoding = 'utf-8'
 
     soup = BeautifulSoup(response.content, 'lxml')
@@ -77,7 +78,7 @@ def getTeach(returnJson=0):
 
     url = "http://tplan.madi.ru/tasks/task8_prepview.php"
 
-    response = requests.get(url=url, headers=headers, proxies=proxyDict, verify=False)
+    response = requests.get(url=url, headers=headers, proxies=None, verify=False)
     response.encoding = 'utf-8'
 
     soup = BeautifulSoup(response.content, 'lxml')
@@ -102,7 +103,7 @@ def getFastPlan(gp_name, gp_id):
     params = {
         'tab': '7',
         'gp_id': gp_id}
-    response = requests.post(url=url, data=params, headers=headers, proxies=proxyDict, verify=False)
+    response = requests.post(url=url, data=params, headers=headers, proxies=None, verify=False)
     response.encoding = 'utf-8'
 
     table_data = [[cell.text for cell in row()]
@@ -124,7 +125,7 @@ def getExtPlan(gp_name, gp_id, sem_no, tp_year):
         'gp_id': gp_id,
         'sem_no': sem_no,
         'tp_year': tp_year}
-    response = requests.post(url=url, data=params, headers=headers, proxies=proxyDict, verify=False)
+    response = requests.post(url=url, data=params, headers=headers, proxies=None, verify=False)
     response.encoding = 'utf-8'
 
     table_data = [[cell.text for cell in row()]
@@ -147,7 +148,7 @@ def getDeptPlan(dep_name, dep_id, sem_no, tp_year):
         'sort': 1,
         'sem_no': sem_no,
         'tp_year': tp_year}
-    response = requests.post(url=url, data=params, headers=headers, proxies=proxyDict, verify=False)
+    response = requests.post(url=url, data=params, headers=headers, proxies=None, verify=False)
     response.encoding = 'utf-8'
 
     table_data = [[cell.text for cell in row()]
@@ -172,7 +173,7 @@ def getTeachPlan(tp_year, sem_no, teach_id, teach_name):
         'pr_id': teach_id,
         'pr_name': teach_name
         }
-    response = requests.post(url=url, data=params, headers=headers, proxies=proxyDict, verify=False)
+    response = requests.post(url=url, data=params, headers=headers, proxies=None, verify=False)
     response.encoding = 'utf-8'
 
     table_data = [[cell.text for cell in row()]
@@ -188,7 +189,29 @@ def getGroupId(gp_name):
     print(gp_id)
     return gp_id
 
-if __name__ == '__main__':
-    pr = getGroups(0)
-    print(pr)
+def getGrpEkzRasp(gp_name, gp_id):
+    headers = {'X-Requested-With': 'XMLHttpRequest',
+               'User-Agent': 'Mozilla/5.0',
+               'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
 
+    url = "https://tplan.madi.ru/tasks/tableFiller.php"
+
+    params = {
+        'tab': '3',
+        'gp_name': gp_name,
+        'gp_id': gp_id
+    }
+    response = requests.post(url=url, data=params, headers=headers, verify=False)
+    response.encoding = 'utf-8'
+
+    table_data = [[cell.text for cell in row()]
+                  for row in BeautifulSoup(response.text, 'lxml')("tr")]
+
+    dictOfWords = {i: table_data[i] for i in range(0, len(table_data))}
+
+
+    return (json.dumps(dict(dictOfWords), ensure_ascii=False))
+
+if __name__ == '__main__':
+    ekz = getGrpEkzRasp('1A1', 7555)
+    print(ekz)

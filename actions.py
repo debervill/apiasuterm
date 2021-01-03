@@ -4,6 +4,9 @@ from proxy import proxyDict
 from bs4 import BeautifulSoup
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+import logging 
+from pprint import pprint 
+
 
 
 def getGroups(returnJson=0):
@@ -185,20 +188,24 @@ def getTeachPlan(tp_year, sem_no, teach_id, teach_name):
 
 def getGroupId(gp_name):
     allGp = getGroups()
+
     gp_id = allGp.get(gp_name)
-    print(gp_id)
+
     return gp_id
 
-def getGrpEkzRasp(gp_name, gp_id):
+def getGrpEkzRasp(gp_name):
+    pprint(gp_name)
     headers = {'X-Requested-With': 'XMLHttpRequest',
                'User-Agent': 'Mozilla/5.0',
                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
 
     url = "https://tplan.madi.ru/tasks/tableFiller.php"
 
+    gp_id = getGroupId(gp_name)
+    pprint(gp_id)
+
     params = {
         'tab': '3',
-        'gp_name': gp_name,
         'gp_id': gp_id
     }
     response = requests.post(url=url, data=params, headers=headers, verify=False)
@@ -206,12 +213,13 @@ def getGrpEkzRasp(gp_name, gp_id):
 
     table_data = [[cell.text for cell in row()]
                   for row in BeautifulSoup(response.text, 'lxml')("tr")]
+    #pprint(table_data[7:len(table_data)])
 
-    dictOfWords = {i: table_data[i] for i in range(0, len(table_data))}
+    dictOfWords = {i-7: table_data[i] for i in range(7, len(table_data))}
 
 
     return (json.dumps(dict(dictOfWords), ensure_ascii=False))
 
 if __name__ == '__main__':
-    ekz = getGrpEkzRasp('1A1', 7555)
-    print(ekz)
+    ekz = getGrpEkzRasp("1а3")
+    pprint(ekz)
